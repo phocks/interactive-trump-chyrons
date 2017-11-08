@@ -66,7 +66,7 @@ class Graph extends React.Component {
     if (!this.wrapper) return;
 
     const data = this.props.data.filter(r => {
-      return r.seenAt.getTime() > this.props.fromTime && r.seenAt.getTime() < this.props.toTime;
+      return r.seenAt.getTime() > new Date(2017, 8, 9).getTime();
     });
 
     this.svg = d3
@@ -94,18 +94,20 @@ class Graph extends React.Component {
 
     const colours = d3scale.scaleOrdinal().range(['#fc3605', '#ffc711', '#25a']);
 
-    // g
-    //   .append('g')
-    //   .attr('transform', 'translate(0,' + height + ')')
-    //   .call(d3axis.axisBottom(this.xScale))
-    //   .select('.domain')
-    //   .remove();
+    this.highlight = g
+      .append('rect')
+      .attr('class', 'range-highlight')
+      .attr('x', -100)
+      .attr('y', 0)
+      .attr('width', width + 200)
+      .attr('height', 0)
+      .attr('fill', '#eee');
 
     this.lines = {};
     channels.forEach(channel => {
       this.lines[channel] = g
         .append('path')
-        .datum(data)
+        .data([data])
         .attr('class', 'line-bbc')
         .attr('fill', 'none')
         .attr('stroke', colours(channel))
@@ -132,56 +134,6 @@ class Graph extends React.Component {
       .attr('dy', '0.71em')
       .text('% Trump coverage');
 
-    g
-      .append('path')
-      .attr('class', 'mouse-line')
-      .style('stroke', 'black')
-      .style('stroke-width', 1)
-      .style('opacity', 0);
-
-    g
-      .append('text')
-      .attr('class', 'mouse-line-label')
-      .attr('font-family', 'sans-serif')
-      .attr('font-size', 10)
-      .attr('text-anchor', 'start')
-      .attr('x', 0)
-      .attr('y', 0)
-      .attr('dy', '0.32em')
-      .attr('opacity', 0)
-      .text('');
-
-    this.svg
-      .on('mouseover', () => {
-        const mouseX = d3.mouse(g.node())[0];
-        g.selectAll('.mouse-line').style('opacity', mouseX < 0 ? 0 : 0.5);
-        g.selectAll('.mouse-line-label').style('opacity', mouseX < 0 ? 0 : 0.9);
-      })
-      .on('mousemove', () => {
-        const mouseX = d3.mouse(g.node())[0];
-        const date = roundDate(this.xScale.invert(mouseX));
-        const actualX = this.xScale(date);
-
-        let dateLabel = date
-          .toString()
-          .replace(' 0', ' ')
-          .replace(/ (\d{4})/, '');
-
-        g
-          .selectAll('.mouse-line')
-          .style('opacity', actualX < 0 ? 0 : 0.5)
-          .attr('d', () => 'M' + actualX + ',' + this.yScale.range()[0] + 'L' + actualX + ',' + this.yScale.range()[1]);
-        g
-          .selectAll('.mouse-line-label')
-          .style('transform', `translate(${actualX + 5}px, 5px)`)
-          .style('opacity', mouseX < 0 ? 0 : 0.9)
-          .text(dateLabel);
-      })
-      .on('mouseout', () => {
-        g.selectAll('.mouse-line').style('opacity', 0);
-        g.selectAll('.mouse-line-label').style('opacity', 0);
-      });
-
     var legend = g
       .append('g')
       .attr('font-family', 'sans-serif')
@@ -204,7 +156,7 @@ class Graph extends React.Component {
     legend
       .append('text')
       .attr('x', width - 24)
-      .attr('y', 9.5)
+      .attr('y', 11)
       .attr('dy', '0.32em')
       .text(d => d.replace(/W$/, ''));
   }
@@ -216,20 +168,20 @@ class Graph extends React.Component {
   updateGraph(props) {
     if (!this.wrapper) return;
 
-    const data = props.data.filter(r => {
-      return r.seenAt.getTime() > props.fromTime && r.seenAt.getTime() < props.toTime;
-    });
+    if (props.fromDate) {
+      let { fromDate, toDate } = props;
+      if (!toDate) {
+        toDate = new Date(fromDate);
+        toDate.setDate(toDate.getDate() + 1);
+      }
 
-    this.xScale.domain(d3array.extent(data, d => d.seenAt));
-    Object.keys(this.lines).forEach(key => {
-      this.lines[key].datum(data).attr(
-        'd',
-        d3shape
-          .line()
-          .x(d => this.xScale(d.seenAt))
-          .y(d => this.yScale(d[key]))
-      );
-    });
+      const highlightHeight = this.yScale(toDate) - this.yScale(fromDate);
+      this.highlight
+        .transition()
+        .duration(1000)
+        .attr('y', this.yScale(fromDate) - highlightHeight / 2)
+        .attr('height', highlightHeight);
+    }
   }
 
   render() {

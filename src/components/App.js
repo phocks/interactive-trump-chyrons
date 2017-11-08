@@ -13,25 +13,34 @@ class App extends React.Component {
     super(props);
 
     this.state = {
-      fromTime: new Date(2017, 8, 9),
-      toTime: new Date(2017, 11, 6)
+      fromDate: null,
+      toDate: null
     };
+  }
+
+  componentDidMount() {
+    // TODO: listen for markers here and set the from and to
+    // ...
+
+    setTimeout(() => {
+      this.setState(state => ({
+        fromDate: new Date(2017, 10, 1),
+        toDate: new Date(2017, 10, 10)
+      }));
+
+      setTimeout(() => {
+        this.setState(state => ({
+          fromDate: new Date(2017, 9, 4),
+          toDate: new Date(2017, 9, 8)
+        }));
+      }, 1000);
+    }, 1000);
   }
 
   render() {
     return (
       <div className={styles.root}>
-        <button
-          style={{ display: 'none' }}
-          onClick={e => {
-            this.setState(state => ({
-              fromTime: new Date(2017, 8, 17),
-              toTime: new Date(2017, 8, 22)
-            }));
-          }}>
-          Change range
-        </button>
-        <Graph data={DATA} fromTime={this.state.fromTime} toTime={this.state.toTime} />
+        <Graph data={DATA} fromDate={this.state.fromDate} toDate={this.state.toDate} />
       </div>
     );
   }
