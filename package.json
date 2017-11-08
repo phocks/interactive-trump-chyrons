@@ -1,0 +1,38 @@
+{
+  "name": "interactive-i-have-the-best-news",
+  "version": "1.0.0",
+  "description": "A project generated from aunty's react-app template.",
+  "license": "MIT",
+  "private": true,
+  "contributors": [
+    "Nathan Hoad <nathan@nathanhoad.net>"
+  ],
+  "aunty": "react-app",
+  "scripts": {
+    "start": "aunty serve",
+    "test": "jest"
+  },
+  "jest": {
+    "transform": {
+      ".*": "<rootDir>/node_modules/@abcnews/aunty/src/utils/jest"
+    }
+  },
+  "devDependencies": {
+    "@abcnews/aunty": "^7.1.3",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-react": "^6.24.1",
+    "jest": "^21.2.1",
+    "react-test-renderer": "^16.0.0"
+  },
+  "dependencies": {
+    "d3-array": "^1.2.1",
+    "d3-axis": "^1.0.8",
+    "d3-scale": "^1.0.6",
+    "d3-selection": "^1.1.0",
+    "d3-shape": "^1.2.0",
+    "d3-transition": "^1.1.0",
+    "object-keys": "^1.0.11",
+    "react": "^16.0.0",
+    "react-dom": "^16.0.0"
+  }
+}
