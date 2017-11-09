@@ -1,10 +1,6 @@
-# Interactive I have the best news
+# Interactive Trump Chyrons
 
 A project generated from [aunty](https://github.com/abcnews/aunty)'s `react-app` template.
-
-## Requirements
-
-* Graph can change its from time and to time.
 
 ## Authors
 

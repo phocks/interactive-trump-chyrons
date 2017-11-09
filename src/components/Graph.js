@@ -29,17 +29,41 @@ function roundDate(date) {
   return d;
 }
 
+function getMargins() {
+  let margins = {
+    top: 80,
+    right: 20,
+    bottom: 40,
+    left: 20
+  };
+
+  if (window.innerWidth > 800) {
+    margins.left = 200;
+    margins.right = window.innerWidth - 600;
+  }
+
+  return margins;
+}
+
 class Graph extends React.Component {
   constructor(props) {
     super(props);
 
     this.initGraph = this.initGraph.bind(this);
-    this.updateGraph = this.updateGraph.bind(this);
+    this.updateHighlight = this.updateHighlight.bind(this);
+    this.toggleLegend = this.toggleLegend.bind(this);
+
+    this.onResize = this.onResize.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    // TODO: Add any conditions that mitigate updating the graph
-    this.updateGraph(nextProps);
+    if (this.props.hasLegend !== nextProps.hasLegend) {
+      this.toggleLegend(nextProps.hasLegend);
+    }
+
+    if (this.props.fromDate !== nextProps.fromDate || this.props.toDate !== nextProps.toDate) {
+      this.updateHighlight(nextProps);
+    }
   }
 
   shouldComponentUpdate() {
@@ -48,14 +72,40 @@ class Graph extends React.Component {
 
   componentDidMount() {
     this.initGraph(this.props);
-
-    // TODO: add any listeners here
-    // ...
+    // Listen for resize
+    window.addEventListener('resize', this.onResize);
   }
 
   componentWillUnmount() {
-    // TODO: remove any listeners here
-    // ...
+    window.removeEventListener('resize', this.onResize);
+  }
+
+  onResize() {
+    this.svg.attr('width', window.innerWidth).attr('height', window.innerHeight);
+
+    const margin = getMargins();
+    let width = +this.svg.attr('width') - margin.left - margin.right;
+    let height = +this.svg.attr('height') - margin.top - margin.bottom;
+    this.g.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+    this.xScale.rangeRound([0, width]);
+    this.yScale.rangeRound([0, height]);
+
+    this.highlight.attr('x', 0 - window.innerWidth).attr('width', window.innerWidth * 2);
+    this.legend.select('rect').attr('x', width - 19);
+    this.legend.select('text').attr('x', width - 24);
+    this.lines.forEach(([channel, line]) => {
+      line.attr(
+        'd',
+        d3shape
+          .line()
+          .x(d => this.xScale(d[channel]))
+          .y(d => this.yScale(d.seenAt))
+      );
+    });
+
+    this.xAxis.call(d3axis.axisTop(this.xScale).ticks(2));
+    this.xAxisLabel.attr('transform', `translate(${width}, 0)`);
   }
 
   /**
@@ -75,57 +125,57 @@ class Graph extends React.Component {
       .attr('width', window.innerWidth)
       .attr('height', window.innerHeight);
 
-    let margin = { top: 30, right: 20, bottom: 10, left: 20 };
+    const margin = getMargins();
     let width = +this.svg.attr('width') - margin.left - margin.right;
     let height = +this.svg.attr('height') - margin.top - margin.bottom;
-    let g = this.svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    this.g = this.svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    const channels = ['CNNW', 'MSNBCW', 'FOXNEWSW'];
-
+    this.channels = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
     this.xScale = d3scale
       .scaleLinear()
       .rangeRound([0, width])
       .domain([0, 100]);
-
     this.yScale = d3scale
       .scaleTime()
       .rangeRound([0, height])
       .domain(d3array.extent(data, d => d.seenAt));
 
-    const colours = d3scale.scaleOrdinal().range(['#fc3605', '#ffc711', '#25a']);
+    const colours = d3scale.scaleOrdinal().range(['#ffc711', '#fc3605', '#25a']);
 
-    this.highlight = g
+    this.highlight = this.g
       .append('rect')
       .attr('class', 'range-highlight')
-      .attr('x', -100)
+      .attr('x', 0 - window.innerWidth)
       .attr('y', 0)
-      .attr('width', width + 200)
+      .attr('width', window.innerWidth * 2)
       .attr('height', 0)
-      .attr('fill', '#eee');
+      .attr('fill', '#ccc');
 
-    this.lines = {};
-    channels.forEach(channel => {
-      this.lines[channel] = g
-        .append('path')
-        .data([data])
-        .attr('class', 'line-bbc')
-        .attr('fill', 'none')
-        .attr('stroke', colours(channel))
-        .attr('stroke-linejoin', 'round')
-        .attr('stroke-linecap', 'round')
-        .attr('stroke-width', 1.5)
-        .attr(
-          'd',
-          d3shape
-            .line()
-            .x(d => this.xScale(d[channel]))
-            .y(d => this.yScale(d.seenAt))
-        );
+    this.lines = this.channels.map(channel => {
+      return [
+        channel,
+        this.g
+          .append('path')
+          .data([data])
+          .attr('class', 'chart-line')
+          .attr('data-channel', channel)
+          .attr('fill', 'none')
+          .attr('stroke', colours(channel))
+          .attr('stroke-linejoin', 'round')
+          .attr('stroke-linecap', 'round')
+          .attr('stroke-width', 1.5)
+          .attr(
+            'd',
+            d3shape
+              .line()
+              .x(d => this.xScale(d[channel]))
+              .y(d => this.yScale(d.seenAt))
+          )
+      ];
     });
 
-    g
-      .append('g')
-      .call(d3axis.axisTop(this.xScale).ticks(2))
+    this.xAxis = this.g.append('g').call(d3axis.axisTop(this.xScale).ticks(2));
+    this.xAxisLabel = this.xAxis
       .append('text')
       .attr('fill', '#999')
       .attr('transform', `translate(${width}, 0)`)
@@ -134,26 +184,26 @@ class Graph extends React.Component {
       .attr('dy', '0.71em')
       .text('% Trump coverage');
 
-    var legend = g
+    this.legend = this.g
       .append('g')
       .attr('font-family', 'sans-serif')
       .attr('font-size', 10)
       .attr('text-anchor', 'end')
-      .attr('transform', 'translate(0, 40)')
+      .attr('transform', 'translate(20, 40)')
+      .style('opacity', 0)
+      .attr('class', 'legend')
       .selectAll('g')
-      .data(channels.slice())
+      .data(this.channels.slice())
       .enter()
       .append('g')
       .attr('transform', (d, i) => 'translate(0,' + i * 20 + ')');
-
-    legend
+    this.legend
       .append('rect')
       .attr('x', width - 19)
       .attr('width', 19)
       .attr('height', 19)
       .attr('fill', colours);
-
-    legend
+    this.legend
       .append('text')
       .attr('x', width - 24)
       .attr('y', 11)
@@ -161,26 +211,40 @@ class Graph extends React.Component {
       .text(d => d.replace(/W$/, ''));
   }
 
-  /**
-   * Update the graph. It is important to only update this component through normal D3 methods.
-   * @param {object} props The latest props given to this component
-   */
-  updateGraph(props) {
+  updateHighlight(props) {
     if (!this.wrapper) return;
 
     if (props.fromDate) {
       let { fromDate, toDate } = props;
-      if (!toDate) {
-        toDate = new Date(fromDate);
-        toDate.setDate(toDate.getDate() + 1);
-      }
 
       const highlightHeight = this.yScale(toDate) - this.yScale(fromDate);
       this.highlight
         .transition()
-        .duration(1000)
+        .duration(300)
         .attr('y', this.yScale(fromDate) - highlightHeight / 2)
         .attr('height', highlightHeight);
+    } else {
+      this.highlight.attr('y', 0).attr('height', 0);
+    }
+  }
+
+  toggleLegend(hasLegend) {
+    if (!this.wrapper) return;
+
+    if (hasLegend) {
+      this.g
+        .select('.legend')
+        .transition()
+        .duration(300)
+        .attr('transform', 'translate(0, 40)')
+        .style('opacity', 1);
+    } else {
+      this.g
+        .select('.legend')
+        .transition()
+        .duration(300)
+        .attr('transform', 'translate(20, 40)')
+        .style('opacity', 0);
     }
   }
 

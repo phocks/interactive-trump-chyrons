@@ -5,8 +5,14 @@ const PROJECT_NAME = 'interactive-i-have-the-best-news';
 const root = document.querySelector(`[data-${PROJECT_NAME}-root]`);
 
 function init() {
+  const stage = document.querySelector('.scrollyteller-stage');
+
+  if (stage === null) {
+    return setTimeout(init, 100);
+  }
+
   const App = require('./components/App');
-  render(<App projectName={PROJECT_NAME} />, root);
+  render(<App projectName={PROJECT_NAME} />, stage);
 }
 
 init();
