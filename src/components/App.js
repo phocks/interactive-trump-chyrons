@@ -29,7 +29,8 @@ class App extends React.Component {
     this.state = {
       hasLegend: false,
       fromDate: null,
-      toDate: null
+      toDate: null,
+      bbc: false
     };
   }
 
@@ -68,12 +69,22 @@ class App extends React.Component {
         });
       }
     }
+
+    if (typeof config.bbc !== 'undefined') {
+      this.setState(state => ({ bbc: config.bbc }));
+    }
   }
 
   render() {
     return (
       <div className={styles.wrapper}>
-        <Graph data={DATA} fromDate={this.state.fromDate} toDate={this.state.toDate} hasLegend={this.state.hasLegend} />
+        <Graph
+          data={DATA}
+          fromDate={this.state.fromDate}
+          toDate={this.state.toDate}
+          hasLegend={this.state.hasLegend}
+          bbc={this.state.bbc}
+        />
       </div>
     );
   }

@@ -9,6 +9,8 @@ const keys = require('object-keys');
 
 const styles = require('./Graph.scss');
 
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 /**
  * Works out if either the start of this day or the start of the next day is close and round to it
  * @param {Date} date 
@@ -52,6 +54,7 @@ class Graph extends React.Component {
     this.initGraph = this.initGraph.bind(this);
     this.updateHighlight = this.updateHighlight.bind(this);
     this.toggleLegend = this.toggleLegend.bind(this);
+    this.toggleBBC = this.toggleBBC.bind(this);
 
     this.onResize = this.onResize.bind(this);
   }
@@ -64,6 +67,10 @@ class Graph extends React.Component {
     if (this.props.fromDate !== nextProps.fromDate || this.props.toDate !== nextProps.toDate) {
       this.updateHighlight(nextProps);
     }
+
+    if (this.props.bbc !== nextProps.bbc) {
+      this.toggleBBC(nextProps.bbc);
+    }
   }
 
   shouldComponentUpdate() {
@@ -74,6 +81,9 @@ class Graph extends React.Component {
     this.initGraph(this.props);
     // Listen for resize
     window.addEventListener('resize', this.onResize);
+
+    // Make sure the BBC legend box doesn't creep in
+    this.toggleBBC(false);
   }
 
   componentWillUnmount() {
@@ -130,7 +140,7 @@ class Graph extends React.Component {
     let height = +this.svg.attr('height') - margin.top - margin.bottom;
     this.g = this.svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    this.channels = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
+    this.channels = ['MSNBCW', 'CNNW', 'FOXNEWSW', 'BBCNEWS'];
     this.xScale = d3scale
       .scaleLinear()
       .rangeRound([0, width])
@@ -140,7 +150,7 @@ class Graph extends React.Component {
       .rangeRound([0, height])
       .domain(d3array.extent(data, d => d.seenAt));
 
-    const colours = d3scale.scaleOrdinal().range(['#ffc711', '#fc3605', '#25a']);
+    const colours = d3scale.scaleOrdinal().range(['#ffc711', '#fc3605', '#25a', '#000']);
 
     this.highlight = this.g
       .append('rect')
@@ -151,19 +161,32 @@ class Graph extends React.Component {
       .attr('height', 0)
       .attr('fill', '#ccc');
 
+    this.highlightLabel = this.g
+      .append('text')
+      .text('test')
+      .attr('font-family', 'sans-serif')
+      .attr('font-size', 15)
+      .attr('fill', '#aaa')
+      .attr('transform', `translate(${width}, 0)`)
+      .attr('text-anchor', 'end')
+      .attr('y', 0)
+      .attr('dy', '0.71em')
+      .text('');
+
     this.lines = this.channels.map(channel => {
       return [
         channel,
         this.g
           .append('path')
           .data([data])
-          .attr('class', 'chart-line')
+          .attr('class', `chart-line ${channel}`)
           .attr('data-channel', channel)
           .attr('fill', 'none')
           .attr('stroke', colours(channel))
           .attr('stroke-linejoin', 'round')
           .attr('stroke-linecap', 'round')
           .attr('stroke-width', 1.5)
+          .attr('opacity', channel === 'BBCNEWS' ? 0 : 1)
           .attr(
             'd',
             d3shape
@@ -199,16 +222,20 @@ class Graph extends React.Component {
       .attr('transform', (d, i) => 'translate(0,' + i * 20 + ')');
     this.legend
       .append('rect')
+      .attr('class', d => d)
       .attr('x', width - 19)
       .attr('width', 19)
       .attr('height', 19)
       .attr('fill', colours);
     this.legend
       .append('text')
+      .attr('class', d => d)
       .attr('x', width - 24)
       .attr('y', 11)
       .attr('dy', '0.32em')
-      .text(d => d.replace(/W$/, ''));
+      .text(d => {
+        return d.replace(/W$/, '');
+      });
   }
 
   updateHighlight(props) {
@@ -223,8 +250,17 @@ class Graph extends React.Component {
         .duration(300)
         .attr('y', this.yScale(fromDate) - highlightHeight / 2)
         .attr('height', highlightHeight);
+
+      if (window.innerWidth > 400) {
+        this.highlightLabel
+          .transition()
+          .duration(300)
+          .attr('y', this.yScale(toDate) + 5)
+          .text(MONTHS[fromDate.getMonth()] + ' ' + fromDate.getDate());
+      }
     } else {
       this.highlight.attr('y', 0).attr('height', 0);
+      this.highlightLabel.attr('y', 0).text('');
     }
   }
 
@@ -246,6 +282,14 @@ class Graph extends React.Component {
         .attr('transform', 'translate(20, 40)')
         .style('opacity', 0);
     }
+  }
+
+  toggleBBC(showBBC) {
+    this.g
+      .selectAll('.BBCNEWS')
+      .transition()
+      .duration(800)
+      .attr('opacity', showBBC ? 1 : 0);
   }
 
   render() {
