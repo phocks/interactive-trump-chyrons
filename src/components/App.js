@@ -2,6 +2,8 @@ const React = require('react');
 const styles = require('./App.scss');
 
 const Graph = require('./Graph');
+const HeatMap = require('./HeatMap');
+const Bar = require('./Bar');
 
 const DATA = require('../data-daily-trump.json').map(r => {
   const [year, month, day] = r.seenAt.split('T')[0].split('-');
@@ -27,6 +29,7 @@ class App extends React.Component {
     this.onMark = this.onMark.bind(this);
 
     this.state = {
+      zoom: false,
       hasLegend: false,
       fromDate: null,
       toDate: null,
@@ -73,18 +76,26 @@ class App extends React.Component {
     if (typeof config.bbc !== 'undefined') {
       this.setState(state => ({ bbc: config.bbc }));
     }
+
+    if (typeof config.zoom !== 'undefined') {
+      this.setState(state => ({ zoom: config.zoom }));
+    }
   }
 
   render() {
+    // <Bar data={DATA} />
+
+    // <Graph
+    //   data={DATA}
+    //   fromDate={this.state.fromDate}
+    //   toDate={this.state.toDate}
+    //   hasLegend={this.state.hasLegend}
+    //   bbc={this.state.bbc}
+    // />
+
     return (
       <div className={styles.wrapper}>
-        <Graph
-          data={DATA}
-          fromDate={this.state.fromDate}
-          toDate={this.state.toDate}
-          hasLegend={this.state.hasLegend}
-          bbc={this.state.bbc}
-        />
+        <HeatMap className={styles.heatMap} data={DATA} highlightDate={this.state.fromDate} zoom={this.state.zoom} />
       </div>
     );
   }

@@ -1,0 +1,30 @@
+.wrapper {
+  background: #eee;
+  transition: transform 0.8s ease;
+}
+
+.table {
+  td {
+    padding-bottom: 0;
+    border-bottom: 1px solid #eee;
+
+    &.selected {
+      border-bottom: 1px solid black;
+    }
+  }
+}
+
+.seen {
+  font-size: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  text-align: left;
+  padding-right: 10px;
+  vertical-align: middle;
+
+  transition: transform 0.8s ease;
+}
+
+.box {
+  height: 20px;
+  width: 40px;
+}
