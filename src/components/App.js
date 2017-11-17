@@ -1,9 +1,10 @@
 const React = require('react');
 const styles = require('./App.scss');
 
-const Graph = require('./Graph');
-const HeatMap = require('./HeatMap');
-const Bar = require('./Bar');
+// const Graph = require('./Graph');
+// const HeatMap = require('./HeatMap');
+// const Bar = require('./Bar');
+const StreamGraph = require('./StreamGraph');
 
 const DATA = require('../data-daily-trump.json').map(r => {
   const [year, month, day] = r.seenAt.split('T')[0].split('-');
@@ -93,9 +94,11 @@ class App extends React.Component {
     //   bbc={this.state.bbc}
     // />
 
+    // <HeatMap className={styles.heatMap} data={DATA} highlightDate={this.state.fromDate} zoom={this.state.zoom} />
+
     return (
       <div className={styles.wrapper}>
-        <HeatMap className={styles.heatMap} data={DATA} highlightDate={this.state.fromDate} zoom={this.state.zoom} />
+        <StreamGraph data={DATA} />
       </div>
     );
   }
