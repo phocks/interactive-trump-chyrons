@@ -4,7 +4,9 @@ const styles = require('./App.scss');
 // const Graph = require('./Graph');
 // const HeatMap = require('./HeatMap');
 // const Bar = require('./Bar');
-const StreamGraph = require('./StreamGraph');
+// const StreamGraph = require('./StreamGraph');
+
+const SmallMultiple = require('./SmallMultiple');
 
 const DATA = require('../data-daily-trump.json').map(r => {
   const [year, month, day] = r.seenAt.split('T')[0].split('-');
@@ -64,7 +66,7 @@ class App extends React.Component {
       } else {
         this.setState(state => {
           const fromDate = stringToDate(config.from);
-          const toDate = config.to ? stringToDate(config.to) : stringToDate(config.from, 1);
+          const toDate = config.to ? stringToDate(config.to) : stringToDate(config.from, 2);
 
           return {
             fromDate,
@@ -96,9 +98,11 @@ class App extends React.Component {
 
     // <HeatMap className={styles.heatMap} data={DATA} highlightDate={this.state.fromDate} zoom={this.state.zoom} />
 
+    // <StreamGraph data={DATA} />
+
     return (
       <div className={styles.wrapper}>
-        <StreamGraph data={DATA} />
+        <SmallMultiple className={styles.graph} data={DATA} fromDate={this.state.fromDate} toDate={this.state.toDate} />
       </div>
     );
   }
