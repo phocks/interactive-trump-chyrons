@@ -1,11 +1,6 @@
 const React = require('react');
 const styles = require('./App.scss');
 
-// const Graph = require('./Graph');
-// const HeatMap = require('./HeatMap');
-// const Bar = require('./Bar');
-// const StreamGraph = require('./StreamGraph');
-
 const SmallMultiple = require('./SmallMultiple');
 
 const DATA = require('../data-daily-trump.json').map(r => {
@@ -32,11 +27,8 @@ class App extends React.Component {
     this.onMark = this.onMark.bind(this);
 
     this.state = {
-      zoom: false,
-      hasLegend: false,
       fromDate: null,
-      toDate: null,
-      bbc: false
+      toDate: null
     };
   }
 
@@ -50,12 +42,6 @@ class App extends React.Component {
 
   onMark(mark) {
     const { config } = mark.detail.activated;
-
-    if (typeof config.legend !== 'undefined' && config.legend !== this.state.hasLegend) {
-      this.setState(state => ({
-        hasLegend: config.legend
-      }));
-    }
 
     if (config.from) {
       if (config.from === 'none') {
@@ -75,31 +61,9 @@ class App extends React.Component {
         });
       }
     }
-
-    if (typeof config.bbc !== 'undefined') {
-      this.setState(state => ({ bbc: config.bbc }));
-    }
-
-    if (typeof config.zoom !== 'undefined') {
-      this.setState(state => ({ zoom: config.zoom }));
-    }
   }
 
   render() {
-    // <Bar data={DATA} />
-
-    // <Graph
-    //   data={DATA}
-    //   fromDate={this.state.fromDate}
-    //   toDate={this.state.toDate}
-    //   hasLegend={this.state.hasLegend}
-    //   bbc={this.state.bbc}
-    // />
-
-    // <HeatMap className={styles.heatMap} data={DATA} highlightDate={this.state.fromDate} zoom={this.state.zoom} />
-
-    // <StreamGraph data={DATA} />
-
     return (
       <div className={styles.wrapper}>
         <SmallMultiple className={styles.graph} data={DATA} fromDate={this.state.fromDate} toDate={this.state.toDate} />

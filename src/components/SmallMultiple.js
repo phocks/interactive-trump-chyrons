@@ -11,23 +11,40 @@ const styles = require('./SmallMultiple.scss');
 // Don't include the BBC
 const CHANNELS = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
 const NAMES = ['MSNBC', 'CNN', 'Fox News'];
-const COLOURS = ['#ffc711', '#fc3605', '#25a'];
+const COLOURS = ['#F58602', '#D53131', '#185393'];
 
 const getColour = channel => COLOURS[CHANNELS.indexOf(channel)];
+
+function getMargins() {
+  if (window.innerWidth < 980) {
+    // Scrims go over the chart
+    return {
+      top: window.innerHeight * 0.3,
+      right: window.innerWidth * 0.2,
+      bottom: window.innerHeight * 0.3,
+      left: window.innerWidth * 0.2
+    };
+  } else {
+    return {
+      top: window.innerHeight * 0.3,
+      right: window.innerWidth * 0.6,
+      bottom: window.innerHeight * 0.3,
+      left: window.innerWidth * 0.1
+    };
+  }
+}
 
 class SmallMultiple extends React.Component {
   constructor(props) {
     super(props);
 
     this.initGraph = this.initGraph.bind(this);
-    this.updateGraph = this.updateGraph.bind(this);
-
     this.updateHighlight = this.updateHighlight.bind(this);
+
+    this.onResize = this.onResize.bind(this);
   }
 
   componentWillReceiveProps(nextProps) {
-    this.updateGraph(nextProps);
-
     if (this.props.fromDate !== nextProps.fromDate || this.props.toDate !== nextProps.toDate) {
       this.updateHighlight(nextProps);
     }
@@ -39,14 +56,11 @@ class SmallMultiple extends React.Component {
 
   componentDidMount() {
     this.initGraph(this.props);
-
-    // TODO: add any listeners here
-    // ...
+    window.addEventListener('resize', this.onResize);
   }
 
   componentWillUnmount() {
-    // TODO: remove any listeners here
-    // ...
+    window.removeEventListener('resize', this.onResize);
   }
 
   /**
@@ -61,17 +75,12 @@ class SmallMultiple extends React.Component {
     this.width = window.innerWidth;
     this.height = window.innerHeight;
 
-    const margins = {
-      top: this.height * 0.2,
-      right: this.width * 0.3,
-      bottom: this.height * 0.2,
-      left: this.width * 0.3
-    };
+    const margins = getMargins();
 
     this.actualWidth = this.width - margins.left - margins.right;
     this.actualHeight = this.height - margins.top - margins.bottom;
 
-    this.chartWidth = this.actualWidth / CHANNELS.length;
+    this.chartHeight = this.actualHeight / CHANNELS.length;
 
     this.svg = d3
       .select(this.wrapper)
@@ -82,13 +91,13 @@ class SmallMultiple extends React.Component {
     this.g = this.svg.append('g').attr('transform', `translate(${margins.left}, ${margins.top})`);
 
     this.xScale = d3scale
-      .scaleLinear()
-      .rangeRound([0, this.chartWidth])
-      .domain([0, 100]);
-    this.yScale = d3scale
       .scaleTime()
-      .rangeRound([0, this.actualHeight])
+      .rangeRound([0, this.actualWidth])
       .domain(d3array.extent(data, d => d.seenAt));
+    this.yScale = d3scale
+      .scaleLinear()
+      .rangeRound([0, this.chartHeight])
+      .domain([100, 0]);
 
     this.highlightMask = this.svg
       .append('defs')
@@ -97,8 +106,8 @@ class SmallMultiple extends React.Component {
       .append('rect')
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', this.width)
-      .attr('height', this.actualHeight);
+      .attr('width', this.actualWidth)
+      .attr('height', this.height);
 
     this.info = CHANNELS.map((c, i) => {
       return {
@@ -107,30 +116,30 @@ class SmallMultiple extends React.Component {
           .append('path')
           .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
           .attr('fill', getColour(c))
-          .attr('opacity', 0.3)
-          .attr('transform', `translate(${i * this.chartWidth})`)
+          .attr('opacity', 0.2)
+          .attr('transform', `translate(0, ${i * this.chartHeight})`)
           .attr(
             'd',
             d3shape
               .area()
-              .x0(0)
-              .x1(d => this.xScale(d.value))
-              .y(d => this.yScale(d.seenAt))
+              .x(d => this.xScale(d.seenAt))
+              .y0(this.chartHeight)
+              .y1(d => this.yScale(d.value))
           ),
         pathMasked: this.g
           .append('path')
           .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
           .attr('fill', getColour(c))
           .attr('opacity', 1)
-          .attr('transform', `translate(${i * this.chartWidth})`)
+          .attr('transform', `translate(0, ${i * this.chartHeight})`)
           .attr('clip-path', 'url(#highlight-mask)')
           .attr(
             'd',
             d3shape
               .area()
-              .x0(0)
-              .x1(d => this.xScale(d.value))
-              .y(d => this.yScale(d.seenAt))
+              .x(d => this.xScale(d.seenAt))
+              .y0(this.chartHeight)
+              .y1(d => this.yScale(d.value))
           ),
 
         label: this.g
@@ -139,91 +148,82 @@ class SmallMultiple extends React.Component {
           .attr('font-family', 'serif')
           .attr('font-size', 15)
           .attr('fill', '#000')
-          .attr('text-anchor', 'middle')
-          .attr('x', i * this.chartWidth + this.chartWidth / 2)
-          .attr('y', -25)
+          .attr('text-anchor', 'end')
+          .attr('x', -10)
+          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 10)
           .attr('dy', '0.71em')
           .text(NAMES[i]),
 
         value: this.g
           .append('text')
           .attr('font-family', 'sans-serif')
+          .attr('font-weight', 'bold')
           .attr('font-size', 18)
           .attr('fill', '#000')
-          .attr('text-anchor', 'middle')
-          .attr('x', i * this.chartWidth + this.chartWidth / 2)
-          .attr('y', -25)
+          .attr('text-anchor', 'end')
+          .attr('x', -10)
+          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 30)
           .attr('dy', '0.71em')
           .text('')
       };
     });
 
     this.highlight = {
-      top: this.g
+      start: this.g
         .append('rect')
-        .attr('x', -10)
-        .attr('width', this.actualWidth + 20)
-        .attr('y', 0)
-        .attr('height', 2.5)
+        .attr('x', 0)
+        .attr('width', 2.5)
+        .attr('y', -10)
+        .attr('height', this.actualHeight + 20)
         .attr('fill', '#AAB2B4')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.2),
-      bottom: this.g
+      end: this.g
         .append('rect')
-        .attr('x', -10)
-        .attr('width', this.actualWidth + 20)
-        .attr('y', this.actualHeight)
-        .attr('height', 2.5)
+        .attr('x', this.actualWidth)
+        .attr('width', 2.5)
+        .attr('y', -10)
+        .attr('height', this.actualHeight + 20)
         .attr('fill', '#AAB2B4')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.2),
       label: this.g
         .append('text')
         .attr('font-family', 'sans-serif')
-        .attr('font-size', 15)
+        .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
-        .attr('text-anchor', 'end')
-        .attr('x', -20)
-        .attr('y', 0)
+        .attr('text-anchor', 'middle')
+        .attr('x', 0)
+        .attr('y', -30)
         .attr('dy', '0.9em')
         .attr('opacity', 0)
         .text('')
     };
 
     this.dateLabels = {
-      top: this.g
+      start: this.g
         .append('text')
         .attr('font-family', 'sans-serif')
-        .attr('font-size', 15)
+        .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
-        .attr('text-anchor', 'end')
-        .attr('x', -20)
-        .attr('y', 0)
+        .attr('text-anchor', 'middle')
+        .attr('x', 0)
+        .attr('y', -30)
         .attr('dy', '0.9em')
         .attr('opacity', 1)
         .text(format(data[0].seenAt, 'MMM D')),
-      bottom: this.g
+      end: this.g
         .append('text')
         .attr('font-family', 'sans-serif')
-        .attr('font-size', 15)
+        .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
-        .attr('text-anchor', 'end')
-        .attr('x', -20)
-        .attr('y', this.yScale(data[data.length - 1].seenAt) - 15)
+        .attr('text-anchor', 'middle')
+        .attr('x', this.xScale(data[data.length - 1].seenAt))
+        .attr('y', -30)
         .attr('dy', '0.9em')
         .attr('opacity', 1)
         .text(format(data[data.length - 1].seenAt, 'MMM D'))
     };
-  }
-
-  /**
-   * Update the graph. It is important to only update this component through normal D3 methods.
-   * @param {object} props The latest props given to this component
-   */
-  updateGraph(props) {
-    if (!this.wrapper) return;
-
-    // TODO: Use D3 to update the graph
   }
 
   updateHighlight(props) {
@@ -232,35 +232,35 @@ class SmallMultiple extends React.Component {
     if (props.fromDate) {
       let { fromDate, toDate } = props;
 
-      const highlightHeight = this.yScale(toDate) - this.yScale(fromDate);
-      const top = this.yScale(fromDate) - highlightHeight / 2;
+      const highlightWidth = this.xScale(toDate) - this.xScale(fromDate);
+      const left = this.xScale(fromDate) - highlightWidth / 2;
 
       this.highlightMask
         .transition()
         .duration(300)
-        .attr('y', top)
-        .attr('height', highlightHeight);
+        .attr('x', left)
+        .attr('width', highlightWidth);
 
-      this.highlight.top
+      this.highlight.start
         .transition()
         .duration(300)
-        .attr('y', top);
-      this.highlight.bottom
+        .attr('x', left);
+      this.highlight.end
         .transition()
         .duration(300)
-        .attr('y', top + highlightHeight);
+        .attr('x', left + highlightWidth);
       this.highlight.label
         .transition()
         .duration(300)
         .attr('opacity', 1)
-        .attr('y', top)
+        .attr('x', left)
         .text(format(fromDate, 'MMM D'));
 
-      this.dateLabels.top
+      this.dateLabels.start
         .transition()
         .duration(400)
         .attr('opacity', 0);
-      this.dateLabels.bottom
+      this.dateLabels.end
         .transition()
         .duration(400)
         .attr('opacity', 0);
@@ -271,55 +271,111 @@ class SmallMultiple extends React.Component {
         info.label
           .transition()
           .duration(400)
-          .attr('y', this.yScale(fromDate) - 50);
+          .attr('x', this.xScale(fromDate) - 10);
 
         info.value
           .transition()
-          .duration(350)
+          .duration(400)
           .attr('opacity', 1)
-          .attr('y', this.yScale(fromDate) - 30)
+          .attr('x', this.xScale(fromDate) - 10)
           .text(Math.round(d[info.key]) + '%');
       });
     } else {
       this.highlightMask
         .transition()
         .duration(300)
-        .attr('y', 0)
-        .attr('height', this.height);
+        .attr('x', 0)
+        .attr('width', this.width);
       this.info.forEach(info => {
         info.label
           .transition()
           .duration(400)
-          .attr('y', -25);
+          .attr('x', -10);
         info.value
           .transition()
           .duration(350)
           .attr('opacity', 0)
-          .attr('y', 0);
+          .attr('x', 0);
       });
 
-      this.highlight.top
+      this.highlight.start
         .transition()
         .duration(300)
-        .attr('y', 0);
-      this.highlight.bottom
+        .attr('x', 0);
+      this.highlight.end
         .transition()
         .duration(300)
-        .attr('y', this.actualHeight);
+        .attr('x', this.actualWidth);
       this.highlight.label
         .transition()
         .duration(300)
         .attr('opacity', 0);
 
-      this.dateLabels.top
+      this.dateLabels.start
         .transition()
         .duration(400)
         .attr('opacity', 1);
-      this.dateLabels.bottom
+      this.dateLabels.end
         .transition()
         .duration(400)
         .attr('opacity', 1);
     }
+  }
+
+  onResize() {
+    if (!this.wrapper) return;
+
+    const { data } = this.props;
+
+    this.width = window.innerWidth;
+    this.height = window.innerHeight;
+
+    const margins = getMargins();
+
+    this.actualWidth = this.width - margins.left - margins.right;
+    this.actualHeight = this.height - margins.top - margins.bottom;
+
+    this.chartHeight = this.actualHeight / CHANNELS.length;
+
+    this.svg.attr('width', this.width).attr('height', this.height);
+
+    this.g.attr('transform', `translate(${margins.left}, ${margins.top})`);
+
+    this.xScale.rangeRound([0, this.actualWidth]);
+    this.yScale.rangeRound([0, this.chartHeight]);
+
+    this.highlightMask.attr('height', this.height);
+
+    this.info.forEach((c, i) => {
+      c.pathFaded
+        .data([data.map(d => ({ seenAt: d.seenAt, value: d[c.key] }))])
+        .attr('transform', `translate(0, ${i * this.chartHeight})`)
+        .attr(
+          'd',
+          d3shape
+            .area()
+            .x(d => this.xScale(d.seenAt))
+            .y0(this.chartHeight)
+            .y1(d => this.yScale(d.value))
+        );
+      c.pathMasked
+        .data([data.map(d => ({ seenAt: d.seenAt, value: d[c.key] }))])
+        .attr('transform', `translate(0, ${i * this.chartHeight})`)
+        .attr(
+          'd',
+          d3shape
+            .area()
+            .x(d => this.xScale(d.seenAt))
+            .y0(this.chartHeight)
+            .y1(d => this.yScale(d.value))
+        );
+      c.label.attr('y', i * this.chartHeight + this.chartHeight / 2 + 10);
+      c.value.attr('y', i * this.chartHeight + this.chartHeight / 2 + 30);
+    });
+
+    this.dateLabels.end.attr('x', this.xScale(data[data.length - 1].seenAt));
+
+    this.updateHighlight(this.props);
   }
 
   render() {
