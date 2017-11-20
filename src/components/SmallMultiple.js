@@ -10,7 +10,7 @@ const styles = require('./SmallMultiple.scss');
 
 // Don't include the BBC
 const CHANNELS = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
-const NAMES = ['MSNBC', 'CNN', 'Fox News'];
+const NAMES = ['MSNBC', 'CNN', 'Fox'];
 const COLOURS = ['#F58602', '#D53131', '#185393'];
 
 const getColour = channel => COLOURS[CHANNELS.indexOf(channel)];
@@ -19,9 +19,9 @@ function getMargins() {
   if (window.innerWidth < 980) {
     // Scrims go over the chart
     return {
-      top: window.innerHeight * 0.3,
-      right: window.innerWidth * 0.2,
-      bottom: window.innerHeight * 0.3,
+      top: window.innerHeight * 0.2,
+      right: window.innerWidth * 0.1,
+      bottom: window.innerHeight * 0.4,
       left: window.innerWidth * 0.2
     };
   } else {
@@ -150,7 +150,7 @@ class SmallMultiple extends React.Component {
           .attr('fill', '#000')
           .attr('text-anchor', 'end')
           .attr('x', -10)
-          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 10)
+          .attr('y', i * this.chartHeight + this.chartHeight / 2)
           .attr('dy', '0.71em')
           .text(NAMES[i]),
 
@@ -162,7 +162,7 @@ class SmallMultiple extends React.Component {
           .attr('fill', '#000')
           .attr('text-anchor', 'end')
           .attr('x', -10)
-          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 30)
+          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 20)
           .attr('dy', '0.71em')
           .text('')
       };
