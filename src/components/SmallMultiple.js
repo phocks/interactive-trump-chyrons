@@ -4,11 +4,15 @@ const transition = require('d3-transition');
 const d3scale = require('d3-scale');
 const d3array = require('d3-array');
 const d3shape = require('d3-shape');
+const format = require('date-fns/format');
 
 const styles = require('./SmallMultiple.scss');
 
-const CHANNELS = ['BBCNEWS', 'MSNBCW', 'CNNW', 'FOXNEWSW'];
-const COLOURS = ['#000', '#ffc711', '#fc3605', '#25a'];
+// Don't include the BBC
+const CHANNELS = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
+const NAMES = ['MSNBC', 'CNN', 'Fox News'];
+const COLOURS = ['#ffc711', '#fc3605', '#25a'];
+
 const getColour = channel => COLOURS[CHANNELS.indexOf(channel)];
 
 class SmallMultiple extends React.Component {
@@ -96,37 +100,120 @@ class SmallMultiple extends React.Component {
       .attr('width', this.width)
       .attr('height', this.actualHeight);
 
-    CHANNELS.forEach((c, i) => {
-      this.g
-        .append('path')
-        .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
-        .attr('fill', getColour(c))
-        .attr('opacity', 0.4)
-        .attr('transform', `translate(${i * this.chartWidth})`)
-        .attr(
-          'd',
-          d3shape
-            .area()
-            .x0(0)
-            .x1(d => this.xScale(d.value))
-            .y(d => this.yScale(d.seenAt))
-        );
-      this.g
-        .append('path')
-        .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
-        .attr('fill', getColour(c))
-        .attr('opacity', 1)
-        .attr('transform', `translate(${i * this.chartWidth})`)
-        .attr('clip-path', 'url(#highlight-mask)')
-        .attr(
-          'd',
-          d3shape
-            .area()
-            .x0(0)
-            .x1(d => this.xScale(d.value))
-            .y(d => this.yScale(d.seenAt))
-        );
+    this.info = CHANNELS.map((c, i) => {
+      return {
+        key: c,
+        pathFaded: this.g
+          .append('path')
+          .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
+          .attr('fill', getColour(c))
+          .attr('opacity', 0.3)
+          .attr('transform', `translate(${i * this.chartWidth})`)
+          .attr(
+            'd',
+            d3shape
+              .area()
+              .x0(0)
+              .x1(d => this.xScale(d.value))
+              .y(d => this.yScale(d.seenAt))
+          ),
+        pathMasked: this.g
+          .append('path')
+          .data([data.map(d => ({ seenAt: d.seenAt, value: d[c] }))])
+          .attr('fill', getColour(c))
+          .attr('opacity', 1)
+          .attr('transform', `translate(${i * this.chartWidth})`)
+          .attr('clip-path', 'url(#highlight-mask)')
+          .attr(
+            'd',
+            d3shape
+              .area()
+              .x0(0)
+              .x1(d => this.xScale(d.value))
+              .y(d => this.yScale(d.seenAt))
+          ),
+
+        label: this.g
+          .append('text')
+          .text('test')
+          .attr('font-family', 'serif')
+          .attr('font-size', 15)
+          .attr('fill', '#000')
+          .attr('text-anchor', 'middle')
+          .attr('x', i * this.chartWidth + this.chartWidth / 2)
+          .attr('y', -25)
+          .attr('dy', '0.71em')
+          .text(NAMES[i]),
+
+        value: this.g
+          .append('text')
+          .attr('font-family', 'sans-serif')
+          .attr('font-size', 18)
+          .attr('fill', '#000')
+          .attr('text-anchor', 'middle')
+          .attr('x', i * this.chartWidth + this.chartWidth / 2)
+          .attr('y', -25)
+          .attr('dy', '0.71em')
+          .text('')
+      };
     });
+
+    this.highlight = {
+      top: this.g
+        .append('rect')
+        .attr('x', -10)
+        .attr('width', this.actualWidth + 20)
+        .attr('y', 0)
+        .attr('height', 2.5)
+        .attr('fill', '#AAB2B4')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1.2),
+      bottom: this.g
+        .append('rect')
+        .attr('x', -10)
+        .attr('width', this.actualWidth + 20)
+        .attr('y', this.actualHeight)
+        .attr('height', 2.5)
+        .attr('fill', '#AAB2B4')
+        .attr('stroke', '#fff')
+        .attr('stroke-width', 1.2),
+      label: this.g
+        .append('text')
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 15)
+        .attr('fill', '#AAB2B4')
+        .attr('text-anchor', 'end')
+        .attr('x', -20)
+        .attr('y', 0)
+        .attr('dy', '0.9em')
+        .attr('opacity', 0)
+        .text('')
+    };
+
+    this.dateLabels = {
+      top: this.g
+        .append('text')
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 15)
+        .attr('fill', '#AAB2B4')
+        .attr('text-anchor', 'end')
+        .attr('x', -20)
+        .attr('y', 0)
+        .attr('dy', '0.9em')
+        .attr('opacity', 1)
+        .text(format(data[0].seenAt, 'MMM D')),
+      bottom: this.g
+        .append('text')
+        .attr('font-family', 'sans-serif')
+        .attr('font-size', 15)
+        .attr('fill', '#AAB2B4')
+        .attr('text-anchor', 'end')
+        .attr('x', -20)
+        .attr('y', this.yScale(data[data.length - 1].seenAt) - 15)
+        .attr('dy', '0.9em')
+        .attr('opacity', 1)
+        .text(format(data[data.length - 1].seenAt, 'MMM D'))
+    };
   }
 
   /**
@@ -146,26 +233,92 @@ class SmallMultiple extends React.Component {
       let { fromDate, toDate } = props;
 
       const highlightHeight = this.yScale(toDate) - this.yScale(fromDate);
+      const top = this.yScale(fromDate) - highlightHeight / 2;
+
       this.highlightMask
         .transition()
         .duration(300)
-        .attr('y', this.yScale(fromDate) - highlightHeight / 2)
+        .attr('y', top)
         .attr('height', highlightHeight);
 
-      // if (window.innerWidth > 400) {
-      //   this.highlightLabel
-      //     .transition()
-      //     .duration(300)
-      //     .attr('y', this.yScale(toDate) + 5)
-      //     .text(MONTHS[fromDate.getMonth()] + ' ' + fromDate.getDate());
-      // }
+      this.highlight.top
+        .transition()
+        .duration(300)
+        .attr('y', top);
+      this.highlight.bottom
+        .transition()
+        .duration(300)
+        .attr('y', top + highlightHeight);
+      this.highlight.label
+        .transition()
+        .duration(300)
+        .attr('opacity', 1)
+        .attr('y', top)
+        .text(format(fromDate, 'MMM D'));
+
+      this.dateLabels.top
+        .transition()
+        .duration(400)
+        .attr('opacity', 0);
+      this.dateLabels.bottom
+        .transition()
+        .duration(400)
+        .attr('opacity', 0);
+
+      const d = props.data.find(d => d.seenAt.getTime() === fromDate.getTime());
+
+      this.info.forEach(info => {
+        info.label
+          .transition()
+          .duration(400)
+          .attr('y', this.yScale(fromDate) - 50);
+
+        info.value
+          .transition()
+          .duration(350)
+          .attr('opacity', 1)
+          .attr('y', this.yScale(fromDate) - 30)
+          .text(Math.round(d[info.key]) + '%');
+      });
     } else {
       this.highlightMask
         .transition()
         .duration(300)
         .attr('y', 0)
         .attr('height', this.height);
-      // this.highlightLabel.attr('y', 0).text('');
+      this.info.forEach(info => {
+        info.label
+          .transition()
+          .duration(400)
+          .attr('y', -25);
+        info.value
+          .transition()
+          .duration(350)
+          .attr('opacity', 0)
+          .attr('y', 0);
+      });
+
+      this.highlight.top
+        .transition()
+        .duration(300)
+        .attr('y', 0);
+      this.highlight.bottom
+        .transition()
+        .duration(300)
+        .attr('y', this.actualHeight);
+      this.highlight.label
+        .transition()
+        .duration(300)
+        .attr('opacity', 0);
+
+      this.dateLabels.top
+        .transition()
+        .duration(400)
+        .attr('opacity', 1);
+      this.dateLabels.bottom
+        .transition()
+        .duration(400)
+        .attr('opacity', 1);
     }
   }
 
