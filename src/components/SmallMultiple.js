@@ -146,10 +146,10 @@ class SmallMultiple extends React.Component {
           .append('text')
           .text('test')
           .attr('font-family', 'serif')
-          .attr('font-size', 15)
+          .attr('font-size', 16)
           .attr('fill', '#000')
           .attr('text-anchor', 'end')
-          .attr('x', -10)
+          .attr('x', -15)
           .attr('y', i * this.chartHeight + this.chartHeight / 2)
           .attr('dy', '0.71em')
           .text(NAMES[i]),
@@ -161,7 +161,7 @@ class SmallMultiple extends React.Component {
           .attr('font-size', 18)
           .attr('fill', '#000')
           .attr('text-anchor', 'end')
-          .attr('x', -10)
+          .attr('x', -15)
           .attr('y', i * this.chartHeight + this.chartHeight / 2 + 20)
           .attr('dy', '0.71em')
           .text('')
@@ -253,7 +253,7 @@ class SmallMultiple extends React.Component {
         .transition()
         .duration(300)
         .attr('opacity', 1)
-        .attr('x', left)
+        .attr('x', left + highlightWidth / 2)
         .text(format(fromDate, 'MMM D'));
 
       this.dateLabels.start
@@ -271,13 +271,13 @@ class SmallMultiple extends React.Component {
         info.label
           .transition()
           .duration(400)
-          .attr('x', this.xScale(fromDate) - 10);
+          .attr('x', this.xScale(fromDate) - 15);
 
         info.value
           .transition()
           .duration(400)
           .attr('opacity', 1)
-          .attr('x', this.xScale(fromDate) - 10)
+          .attr('x', this.xScale(fromDate) - 15)
           .text(Math.round(d[info.key]) + '%');
       });
     } else {
