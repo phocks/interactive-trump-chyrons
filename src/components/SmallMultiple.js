@@ -13,21 +13,24 @@ const CHANNELS = ['MSNBCW', 'CNNW', 'FOXNEWSW'];
 const NAMES = ['MSNBC', 'CNN', 'Fox'];
 const COLOURS = ['#F58602', '#D53131', '#185393'];
 
+const SERIF_FONT = 'ABCSerif,Book Antiqua,Palatino Linotype,Palatino,serif';
+const SANS_SERIF_FONT = 'ABCSans,Helvetica,Arial,sans-serif';
+
 const getColour = channel => COLOURS[CHANNELS.indexOf(channel)];
 
 function getMargins() {
   if (window.innerWidth < 980) {
     // Scrims go over the chart
     return {
-      top: window.innerHeight * 0.2,
-      right: window.innerWidth * 0.1,
-      bottom: window.innerHeight * 0.4,
-      left: window.innerWidth * 0.2
+      top: window.innerHeight * 0.17,
+      right: window.innerWidth * 0.1 + 25,
+      bottom: window.innerHeight * 0.43,
+      left: window.innerWidth * 0.27
     };
   } else {
     return {
       top: window.innerHeight * 0.3,
-      right: window.innerWidth * 0.6,
+      right: window.innerWidth * 0.6 + 25,
       bottom: window.innerHeight * 0.3,
       left: window.innerWidth * 0.1
     };
@@ -90,6 +93,10 @@ class SmallMultiple extends React.Component {
 
     this.g = this.svg.append('g').attr('transform', `translate(${margins.left}, ${margins.top})`);
 
+    const max = data.reduce((m, current) => {
+      return Math.max(m, current.MSNBCW, current.CNNW, current.FOXNEWSW);
+    }, 0);
+
     this.xScale = d3scale
       .scaleTime()
       .rangeRound([0, this.actualWidth])
@@ -109,6 +116,7 @@ class SmallMultiple extends React.Component {
       .attr('width', this.actualWidth)
       .attr('height', this.height);
 
+    const scaleHeight = this.yScale(100 - max) + 2;
     this.info = CHANNELS.map((c, i) => {
       return {
         key: c,
@@ -145,36 +153,83 @@ class SmallMultiple extends React.Component {
         label: this.g
           .append('text')
           .text('test')
-          .attr('font-family', 'serif')
+          .attr('font-family', SERIF_FONT)
           .attr('font-size', 16)
-          .attr('fill', '#000')
+          .attr('fill', '#444444')
           .attr('text-anchor', 'end')
-          .attr('x', -15)
-          .attr('y', i * this.chartHeight + this.chartHeight / 2)
+          .attr('x', -5)
+          .attr('y', i * this.chartHeight + (window.innerWidth < 400 ? this.chartHeight / 3 : this.chartHeight / 2))
           .attr('dy', '0.71em')
           .text(NAMES[i]),
 
         value: this.g
           .append('text')
-          .attr('font-family', 'sans-serif')
+          .attr('font-family', SANS_SERIF_FONT)
           .attr('font-weight', 'bold')
-          .attr('font-size', 18)
-          .attr('fill', '#000')
+          .attr('font-size', 25)
+          .attr('fill', '#444444')
           .attr('text-anchor', 'end')
-          .attr('x', -15)
-          .attr('y', i * this.chartHeight + this.chartHeight / 2 + 20)
+          .attr('x', -5)
+          .attr(
+            'y',
+            i * this.chartHeight + (window.innerWidth < 400 ? this.chartHeight / 3 : this.chartHeight / 2) + 24
+          )
           .attr('dy', '0.71em')
-          .text('')
+          .text(''),
+
+        scale: this.g
+          .append('rect')
+          .attr('x', this.actualWidth)
+          .attr('width', 2.5)
+          .attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 3)
+          .attr('height', this.yScale(100 - max))
+          .attr('fill', '#AAB2B4')
+          .attr('stroke', '#fff')
+          .attr('stroke-width', 1.2),
+
+        scaleMin: this.g
+          .append('text')
+          .attr('font-family', SANS_SERIF_FONT)
+          .attr('font-size', 12)
+          .attr('fill', '#AAB2B4')
+          .attr('text-anchor', 'start')
+          .attr('x', this.actualWidth + 6)
+          .attr('y', i * this.chartHeight + this.chartHeight)
+          .attr('dy', '0.2em')
+          .text('0%'),
+        scaleMax: this.g
+          .append('text')
+          .attr('font-family', SANS_SERIF_FONT)
+          .attr('font-size', 12)
+          .attr('fill', '#AAB2B4')
+          .attr('text-anchor', 'start')
+          .attr('x', this.actualWidth + 6)
+          .attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 5)
+          .attr('dy', '0.2em')
+          .text(Math.round(max) + '%')
       };
     });
+
+    // this.g
+    //   .append('rect')
+    //   .attr('x', this.actualWidth)
+    //   .attr('width', 2.5)
+    //   .attr('y', this.chartHeight - scaleHeight + 3)
+    //   .attr('height', this.yScale(100 - max))
+    //   .attr('fill', '#AAB2B4')
+    //   .attr('stroke', '#fff')
+    //   .attr('stroke-width', 1.2);
+
+    // console.log('chart height', this.chartHeight);
+    // console.log('max', max, '=>', this.yScale(100 - max));
 
     this.highlight = {
       start: this.g
         .append('rect')
         .attr('x', 0)
         .attr('width', 2.5)
-        .attr('y', -10)
-        .attr('height', this.actualHeight + 20)
+        .attr('y', 10)
+        .attr('height', this.actualHeight)
         .attr('fill', '#AAB2B4')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.2),
@@ -182,19 +237,19 @@ class SmallMultiple extends React.Component {
         .append('rect')
         .attr('x', this.actualWidth)
         .attr('width', 2.5)
-        .attr('y', -10)
-        .attr('height', this.actualHeight + 20)
+        .attr('y', 10)
+        .attr('height', this.actualHeight)
         .attr('fill', '#AAB2B4')
         .attr('stroke', '#fff')
         .attr('stroke-width', 1.2),
       label: this.g
         .append('text')
-        .attr('font-family', 'sans-serif')
+        .attr('font-family', SANS_SERIF_FONT)
         .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
         .attr('text-anchor', 'middle')
         .attr('x', 0)
-        .attr('y', -30)
+        .attr('y', -10)
         .attr('dy', '0.9em')
         .attr('opacity', 0)
         .text('')
@@ -203,23 +258,23 @@ class SmallMultiple extends React.Component {
     this.dateLabels = {
       start: this.g
         .append('text')
-        .attr('font-family', 'sans-serif')
+        .attr('font-family', SANS_SERIF_FONT)
         .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
         .attr('text-anchor', 'middle')
         .attr('x', 0)
-        .attr('y', -30)
+        .attr('y', -10)
         .attr('dy', '0.9em')
         .attr('opacity', 1)
         .text(format(data[0].seenAt, 'MMM D')),
       end: this.g
         .append('text')
-        .attr('font-family', 'sans-serif')
+        .attr('font-family', SANS_SERIF_FONT)
         .attr('font-size', 12)
         .attr('fill', '#AAB2B4')
         .attr('text-anchor', 'middle')
         .attr('x', this.xScale(data[data.length - 1].seenAt))
-        .attr('y', -30)
+        .attr('y', -10)
         .attr('dy', '0.9em')
         .attr('opacity', 1)
         .text(format(data[data.length - 1].seenAt, 'MMM D'))
@@ -233,7 +288,7 @@ class SmallMultiple extends React.Component {
       let { fromDate, toDate } = props;
 
       const highlightWidth = this.xScale(toDate) - this.xScale(fromDate);
-      const left = this.xScale(fromDate) - highlightWidth / 2;
+      const left = this.xScale(fromDate) - highlightWidth / 1.6;
 
       this.highlightMask
         .transition()
@@ -290,7 +345,7 @@ class SmallMultiple extends React.Component {
         info.label
           .transition()
           .duration(400)
-          .attr('x', -10);
+          .attr('x', -5);
         info.value
           .transition()
           .duration(350)
@@ -382,5 +437,9 @@ class SmallMultiple extends React.Component {
     return <div className={`${styles.wrapper} ${this.props.className}`} ref={el => (this.wrapper = el)} />;
   }
 }
+
+SmallMultiple.defaultProps = {
+  className: ''
+};
 
 module.exports = SmallMultiple;

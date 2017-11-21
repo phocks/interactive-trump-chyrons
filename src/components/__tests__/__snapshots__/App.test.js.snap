@@ -2,20 +2,10 @@
 
 exports[`App It renders 1`] = `
 <div
-  className="root"
+  className="wrapper"
 >
-  <button
-    onClick={[Function]}
-    style={
-      Object {
-        "display": "none",
-      }
-    }
-  >
-    Change range
-  </button>
   <div
-    className="wrapper"
+    className="wrapper graph"
   />
 </div>
 `;
