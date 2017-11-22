@@ -11,8 +11,8 @@
   left: 0;
 }
 
-@media only screen and (min-device-width: 480px) {
-  :global(.u-richtext:before) {
-    background: none !important;
+@media only screen and (min-width: 980px) {
+  :global(.is-richtext > .Block-content.u-richtext:before) {
+    background: none;
   }
 }

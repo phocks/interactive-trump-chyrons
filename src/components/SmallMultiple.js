@@ -93,7 +93,7 @@ class SmallMultiple extends React.Component {
 
     this.g = this.svg.append('g').attr('transform', `translate(${margins.left}, ${margins.top})`);
 
-    const max = data.reduce((m, current) => {
+    this.max = data.reduce((m, current) => {
       return Math.max(m, current.MSNBCW, current.CNNW, current.FOXNEWSW);
     }, 0);
 
@@ -116,7 +116,7 @@ class SmallMultiple extends React.Component {
       .attr('width', this.actualWidth)
       .attr('height', this.height);
 
-    const scaleHeight = this.yScale(100 - max) + 2;
+    const scaleHeight = this.yScale(100 - this.max) + 2;
     this.info = CHANNELS.map((c, i) => {
       return {
         key: c,
@@ -182,11 +182,10 @@ class SmallMultiple extends React.Component {
           .attr('x', this.actualWidth)
           .attr('width', 2.5)
           .attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 3)
-          .attr('height', this.yScale(100 - max))
+          .attr('height', this.yScale(100 - this.max))
           .attr('fill', '#AAB2B4')
           .attr('stroke', '#fff')
           .attr('stroke-width', 1.2),
-
         scaleMin: this.g
           .append('text')
           .attr('font-family', SANS_SERIF_FONT)
@@ -206,22 +205,9 @@ class SmallMultiple extends React.Component {
           .attr('x', this.actualWidth + 6)
           .attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 5)
           .attr('dy', '0.2em')
-          .text(Math.round(max) + '%')
+          .text(Math.round(this.max) + '%')
       };
     });
-
-    // this.g
-    //   .append('rect')
-    //   .attr('x', this.actualWidth)
-    //   .attr('width', 2.5)
-    //   .attr('y', this.chartHeight - scaleHeight + 3)
-    //   .attr('height', this.yScale(100 - max))
-    //   .attr('fill', '#AAB2B4')
-    //   .attr('stroke', '#fff')
-    //   .attr('stroke-width', 1.2);
-
-    // console.log('chart height', this.chartHeight);
-    // console.log('max', max, '=>', this.yScale(100 - max));
 
     this.highlight = {
       start: this.g
@@ -401,6 +387,7 @@ class SmallMultiple extends React.Component {
 
     this.highlightMask.attr('height', this.height);
 
+    const scaleHeight = this.yScale(100 - this.max) + 2;
     this.info.forEach((c, i) => {
       c.pathFaded
         .data([data.map(d => ({ seenAt: d.seenAt, value: d[c.key] }))])
@@ -426,6 +413,13 @@ class SmallMultiple extends React.Component {
         );
       c.label.attr('y', i * this.chartHeight + this.chartHeight / 2 + 10);
       c.value.attr('y', i * this.chartHeight + this.chartHeight / 2 + 30);
+
+      c.scale
+        .attr('x', this.actualWidth)
+        .attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 3)
+        .attr('height', this.yScale(100 - this.max));
+      c.scaleMin.attr('x', this.actualWidth + 6).attr('y', i * this.chartHeight + this.chartHeight);
+      c.scaleMax.attr('x', this.actualWidth + 6).attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 5);
     });
 
     this.dateLabels.end.attr('x', this.xScale(data[data.length - 1].seenAt));
