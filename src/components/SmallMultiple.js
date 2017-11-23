@@ -306,7 +306,13 @@ class SmallMultiple extends React.Component {
         .duration(400)
         .attr('opacity', 0);
 
-      const d = props.data.find(d => d.seenAt.getTime() === fromDate.getTime());
+      // Find the data point with the fromDate
+      let d;
+      props.data.forEach(datum => {
+        if (datum.seenAt.getTime() === fromDate.getTime()) {
+          d = datum;
+        }
+      });
 
       this.info.forEach(info => {
         info.label
@@ -422,6 +428,8 @@ class SmallMultiple extends React.Component {
       c.scaleMax.attr('x', this.actualWidth + 6).attr('y', i * this.chartHeight + this.chartHeight - scaleHeight + 5);
     });
 
+    this.highlight.start.attr('height', this.actualHeight);
+    this.highlight.end.attr('height', this.actualHeight);
     this.dateLabels.end.attr('x', this.xScale(data[data.length - 1].seenAt));
 
     this.updateHighlight(this.props);
