@@ -28,7 +28,8 @@ class App extends React.Component {
 
     this.state = {
       fromDate: null,
-      toDate: null
+      toDate: null,
+      label: false
     };
   }
 
@@ -61,12 +62,24 @@ class App extends React.Component {
         });
       }
     }
+
+    if (config.label) {
+      this.setState(state => ({
+        label: config.label
+      }));
+    }
   }
 
   render() {
     return (
       <div className={styles.wrapper}>
-        <SmallMultiple className={styles.graph} data={DATA} fromDate={this.state.fromDate} toDate={this.state.toDate} />
+        <SmallMultiple
+          className={styles.graph}
+          data={DATA}
+          fromDate={this.state.fromDate}
+          toDate={this.state.toDate}
+          label={this.state.label}
+        />
       </div>
     );
   }

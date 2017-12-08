@@ -51,6 +51,10 @@ class SmallMultiple extends React.Component {
     if (this.props.fromDate !== nextProps.fromDate || this.props.toDate !== nextProps.toDate) {
       this.updateHighlight(nextProps);
     }
+
+    if (this.props.label !== nextProps.label) {
+      this.updateLabel(nextProps);
+    }
   }
 
   shouldComponentUpdate() {
@@ -157,6 +161,7 @@ class SmallMultiple extends React.Component {
           .attr('font-size', 16)
           .attr('fill', '#444444')
           .attr('text-anchor', 'end')
+          .style('opacity', 0)
           .attr('x', -5)
           .attr('y', i * this.chartHeight + (window.innerWidth < 400 ? this.chartHeight / 3 : this.chartHeight / 2))
           .attr('dy', '0.71em')
@@ -367,6 +372,15 @@ class SmallMultiple extends React.Component {
         .duration(400)
         .attr('opacity', 1);
     }
+  }
+
+  updateLabel(props) {
+    this.info.forEach(info => {
+      info.label
+        .transition()
+        .duration(400)
+        .style('opacity', props.label ? 1 : 0);
+    });
   }
 
   onResize() {
