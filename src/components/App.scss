@@ -12,7 +12,7 @@
 }
 
 @media only screen and (min-width: 980px) {
-  :global(.is-richtext > .Block-content.u-richtext:before) {
-    background: none;
+  :global(.Block-content) > * {
+    background-color: transparent !important;
   }
 }
