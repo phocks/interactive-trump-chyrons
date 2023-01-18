@@ -6,7 +6,7 @@ const d3collection = require('d3-collection');
 const d3array = require('d3-array');
 const d3interpolate = require('d3-interpolate');
 
-const styles = require('./StreamGraph.scss');
+const styles = require('./StreamGraph.scss').default;
 
 const CHANNELS = ['BBCNEWS', 'MSNBCW', 'CNNW', 'FOXNEWSW'];
 const getColour = d3scale.scaleOrdinal().range(['#ffc711', '#fc3605', '#25a', '#000']);

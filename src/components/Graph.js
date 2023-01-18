@@ -7,7 +7,7 @@ const d3array = require('d3-array');
 const d3axis = require('d3-axis');
 const keys = require('object-keys');
 
-const styles = require('./Graph.scss');
+const styles = require('./Graph.scss').default;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 

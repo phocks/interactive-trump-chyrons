@@ -1,6 +1,6 @@
 const React = require('react');
 
-const styles = require('./Bar.scss');
+const styles = require('./Bar.scss').default;
 
 class Bar extends React.Component {
   render() {

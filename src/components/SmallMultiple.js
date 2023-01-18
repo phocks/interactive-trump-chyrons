@@ -6,7 +6,7 @@ const d3array = require('d3-array');
 const d3shape = require('d3-shape');
 const format = require('date-fns/format');
 
-const styles = require('./SmallMultiple.scss');
+const styles = require('./SmallMultiple.scss').default;
 
 // Don't include the BBC
 const CHANNELS = ['MSNBCW', 'CNNW', 'FOXNEWSW'];

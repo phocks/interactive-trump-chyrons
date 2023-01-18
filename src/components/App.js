@@ -1,5 +1,5 @@
 const React = require('react');
-const styles = require('./App.scss');
+const styles = require('./App.scss').default;
 
 const SmallMultiple = require('./SmallMultiple');
 
@@ -42,6 +42,8 @@ class App extends React.Component {
   }
 
   onMark(mark) {
+    // Oh hi Mark!
+    if (!mark.detail.activated) return;
     const { config } = mark.detail.activated;
 
     if (config.from) {

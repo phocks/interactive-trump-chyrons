@@ -3,7 +3,7 @@ const d3scale = require('d3-scale');
 const d3array = require('d3-array');
 const format = require('date-fns/format');
 
-const styles = require('./HeatMap.scss');
+const styles = require('./HeatMap.scss').default;
 const colours = [
   '#eeeeee',
   '#f3e5de',
